@@ -19,10 +19,15 @@ abstract class Client
 
     private function getQueryData(Query $query): array
     {
-        $queryString = 'query { ' . $this->getQueryString($query) . ' }';
+        $queryBody = $this->getQueryString($query);
+        $queryString = sprintf(
+            'query %s { %s }',
+            $query->getQueryHeader($this->variables),
+            $queryBody
+        );
         return [
             'query' => $queryString,
-            'variables' => null
+            'variables' => $this->getVariableContent($this->variables)
         ];
     }
 
@@ -200,6 +205,11 @@ abstract class Client
                 $this->assertFieldInArray($field, $element);
             }
         }
+    }
+
+    public function explain(Query $query, $mutation = false)
+    {
+        return $mutation ? $this->getMutationData($query) : $this->getQueryData($query);
     }
 
     abstract protected function postQuery(array $data): array;
